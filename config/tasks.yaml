@@ -1,0 +1,15 @@
+FRAGMENT:
+  tasks:
+  maxTestTime: 250
+  skipExist: False
+
+SERIAL:
+  tasks:
+  dt: 0.1
+  maxTestTime: 200
+  skipExist: True
+
+REPLAY:
+  tasks:
+  visualize: True
+  skipExist: False
