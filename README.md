@@ -439,18 +439,19 @@ def setup_env(config):
 - 目前本项目仅添加了Dilu的思考模块，反思模块将会在后续进一步更新
 - Dilu架构及功能详见[Dilu](https://github.com/PJLab-ADG/DiLu)
 
-### 3 网络问题
+
+
+### 3 Openai密钥获取
 
 #### 3.1 密钥申请
 
 - 首先，想要申请Openai的key，必须先有一个Openai的账号
 
-- 其次，需要一份由海外发行的银行卡（Visa或者万事达），国内或者港澳发行的银行卡均不可用，但是可以用虚拟卡替代
-
 - 登录之后，在[API管理平台](https://platform.openai.com/api-keys)点击如图所示按钮即可申请你自己的API-key了
+
+  > 账户初始有$5额度
 
   ![image-20240806171548753](C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20240806171548753.png)
 
 - 获取key之后，在项目``config/config.yaml``文件中修改即可
-
 
