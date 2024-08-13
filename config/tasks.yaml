@@ -1,6 +1,6 @@
 FRAGMENT:
   tasks:
-  maxTestTime: 250
+  maxTestTime: 25
   skipExist: False
 
 SERIAL:

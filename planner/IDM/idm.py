@@ -46,11 +46,7 @@ class IDM(PlannerBase):
         # 加载背景要素状态信息
         for obj_type in observation.object_info:
             for obj_name, obj_info in observation.object_info[obj_type].items():
-                sub_frame = pd.DataFrame(
-                    vars(obj_info),
-                    columns=['x', 'y', 'v', 'yaw', 'length', 'width'],
-                    index=[obj_name]
-                )
+                sub_frame = pd.DataFrame(vars(obj_info), columns=['x', 'y', 'v', 'yaw', 'length', 'width'],index=[obj_name])
                 frame = pd.concat([frame, sub_frame])
         state = frame.to_numpy()
 

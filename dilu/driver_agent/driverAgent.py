@@ -52,7 +52,7 @@ class DriverAgent:
         self.sce = sce
 
         try:
-            # print("Use OpenAI API")
+            print("Use OpenAI API")
             self.llm = ChatOpenAI(
                 temperature=temperature,
                 callbacks=[OpenAICallbackHandler()],
@@ -61,11 +61,16 @@ class DriverAgent:
                 request_timeout=60,
                 streaming=True,
             )
-            # print("finished")
+            print("finished")
         except Exception as e:
             print(f"An error occurred: {e}")
 
-    def few_shot_decision(self, scenario_description: str = "Not available", previous_decisions: str = "Not available", available_actions: str = "Not available", driving_intensions: str = "Not available", fewshot_messages: List[str] = None, fewshot_answers: List[str] = None):
+    def few_shot_decision(self, scenario_description: str = "Not available",
+                          previous_decisions: str = "Not available",
+                          available_actions: str = "Not available",
+                          driving_intensions: str = "Not available",
+                          fewshot_messages: List[str] = None,
+                          fewshot_answers: List[str] = None):
         # for template usage refer to: https://python.langchain.com/docs/modules/model_io/prompts/prompt_templates/
 
         system_message = textwrap.dedent(f"""\

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
-
 from utils.observation import Observation
+import pandas as pd
 
 class PlannerBase(ABC):
     def __init__(self) -> None:
@@ -40,4 +40,18 @@ class PlannerBase(ABC):
                 acc {float} -- 主车下一时刻的纵向加速度(m/s^2)    
                 rotate {float} -- 主车下一时刻的前轮转角(rad)    
         """
+        frame = pd.DataFrame(
+            vars(observation.ego_info),
+            columns=['x', 'y', 'v', 'yaw', 'length', 'width'],
+            index=['ego']
+        )
+        # 加载背景要素状态信息
+        for obj_type in observation.object_info:
+            for obj_name, obj_info in observation.object_info[obj_type].items():
+                sub_frame = pd.DataFrame(vars(obj_info), columns=['x', 'y', 'v', 'yaw', 'length', 'width'],index=[obj_name])
+                frame = pd.concat([frame, sub_frame])
+        state = frame.to_numpy()
+
+        sce_description = sce.describe(observation.object_info)
+        avail_action = sce.availableActionsDescription
         pass

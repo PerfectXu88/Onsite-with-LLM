@@ -35,23 +35,36 @@ ACTIONS_DESCRIPTION = {
 
 class EnvScenario:
     def __init__(self) -> None:
-        pass
+        self.bias = 1.5
 
     def availableActionsDescription(self, frame) -> str:
         LaneIndex = self.get_lane_index(frame['y']['ego'])
 
         if LaneIndex == 0:
             ava = [1, 2, 3, 4]
+            # ava = [1, 2, 3]
         elif LaneIndex == 2:
             ava = [0, 1, 3, 4]
+            # ava = [0, 1, 3]
         else:
             ava = [0, 1, 2, 3, 4]
+            # ava = [0, 1, 2, 3]
+        # ava = ava.remove(4)
 
         avaliableActionDescription = 'Your available actions are: \n'
 
         for action in ava:
             avaliableActionDescription += ACTIONS_DESCRIPTION[action] + ' Action_id: ' + str(
                 action) + '\n'
+        if 3 in ava:
+            avaliableActionDescription += 'You should consider acceleration action as FIRST PRIORITY and drive as fast as possible. '
+        if 0 in ava or 2 in ava:
+            avaliableActionDescription += 'For change lane action, CAREFULLY CHECK the safety of vehicles on target lane and consider SAFETY as FIRST PRIORITY. '
+        # if 1 in ava:
+        #     avaliableActionDescription += 'The IDLE action is LAST priority. '
+        if 4 in ava:
+            avaliableActionDescription += 'The deceleration action is LAST priority. '
+        avaliableActionDescription += '\n'
         # if 1 in availableActions:
         #     avaliableActionDescription += 'You should check IDLE action as FIRST priority. '
         # if 0 in availableActions or 2 in availableActions:
@@ -173,33 +186,47 @@ class EnvScenario:
     def get_lane_index(self, real_y):
         # 定义目标列表
         lane_coords = [-3, -7, -11]
+        lane_coords = [x - self.bias for x in lane_coords]
 
         # 使用min函数和abs函数找到最接近的值
         closest_lane_y = min(lane_coords, key=lambda x: abs(x - real_y))
-        if closest_lane_y == -3:
+        if closest_lane_y == -3-self.bias:
             closest_lane_index = 0
-        elif closest_lane_y == -7:
+        elif closest_lane_y == -7-self.bias:
             closest_lane_index = 1
-        elif closest_lane_y == -11:
+        elif closest_lane_y == -11-self.bias:
             closest_lane_index = 2
         else:
             raise "不对不对"
 
         return closest_lane_index
 
-    def getSurrendVehicles(self, subframe) -> list:
+    def getSurrendVehicles(self, frame, LaneIndex, subframe):
+
+        ego_pos = frame['x']['ego']
         SV = {}
         i = 0
-        for car in subframe.index():
+        for car in subframe.index:
+            x_value = subframe['x'][car],
+            y_value = subframe['y'][car],
+            a_value = subframe['a'][car],
+            v_value = subframe['v'][car],
+            x = float(x_value[0])  # Access the first element if it's a tuple
+            y = float(y_value[0])
+            a = float(a_value[0])
+            v = float(v_value[0])
+            ldx = self.get_lane_index(y)
+            if abs(ldx - LaneIndex)>1 or abs(x - ego_pos)>50:
+                continue
             SV[car] = {
-                'lane_index': self.get_lane_index(car),
+                'lane_index': ldx,
                 'mark': i,
-                'x': subframe['x'][car],
-                'y': subframe['y'][car],
-                'a': subframe['a'][car],
-                'v': subframe['v'][car]
+                'x': x,
+                'y': y,
+                'a': a,
+                'v': v
             }
-        return
+        return SV
 
     def getSVRelativeState(self, ego_pos, sv_x) -> str:
         # CAUTION: 这里有一个问题，pygame 的 y 轴是上下颠倒的，向下是 y 轴的正方向。
@@ -219,7 +246,7 @@ class EnvScenario:
         else:
             return 'is behind of you'
 
-    def describeSVNormalLane(self, ego_pos, LaneIndex, frame, subframe) -> str:
+    def describeSVNormalLane(self, LaneIndex, frame, subframe) -> str:
         # 当 ego 在 StraightLane 上时，车道信息是重要的，需要处理车道信息
         # 首先判断车辆是不是和车辆在同一条 road 上
         #   如果在同一条 road 上，则判断在哪条 lane 上
@@ -231,20 +258,24 @@ class EnvScenario:
         # nextLane = self.network.next_lane(
         #     LaneIndex, self.ego.route, self.ego.position
         # )
-        surroundVehicles = subframe
+        surroundVehicles = self.getSurrendVehicles(frame, LaneIndex, subframe)
+        # validVehicles, existVehicles = self.processSVsNormalLane(
+        #     surroundVehicles, currentLaneIndex
+        # )
         # 非法检测被删除，有bug再加回来
-        if surroundVehicles.empty:
+        if not surroundVehicles:
             SVDescription = "There are no other vehicles driving near you, so you can drive completely according to your own ideas.\n"
             return SVDescription
         else:
             SVDescription = ''
-            for sv in surroundVehicles.index:
-                sv_x = subframe['x'][sv]
-                sv_y = subframe['y'][sv]
-                sv_v = subframe['v'][sv]
-                sv_a = subframe['a'][sv]
+            ego_pos = frame['x']['ego']
+            for key, sv in surroundVehicles.items():
+                sv_x = sv['x']
+                sv_y = sv['y']
+                sv_v = sv['v']
+                sv_a = sv['a']
                 lidx = self.get_lane_index(sv_y)
-                mark = str(sv)[3]
+                mark = str(key)
                 if lidx == LaneIndex:
                     SVDescription += f"- Vehicle `{mark}` is driving on the same lane as you and {self.getSVRelativeState(ego_pos, sv_x)}. "
                 else:
@@ -269,9 +300,10 @@ class EnvScenario:
 
         currentLaneIndex = self.get_lane_index(frame['y']['ego'])
         roadCondition = self.processNormalLane(currentLaneIndex, frame)
-        SVDescription = self.describeSVNormalLane(frame['x']['ego'], currentLaneIndex, frame, subframe)
+        SVDescription = self.describeSVNormalLane(currentLaneIndex, frame, subframe)
+        goalDescription = "\nYour priority is composed of three parts, the first is safety, which means you shouldn't crash with cars around you; the second is efficiency, which means you should drive fast as you can under the rule of safety; the last one is comfort, making passengers comfortable in the car.\n"
 
-        return roadCondition + SVDescription
+        return roadCondition + SVDescription + goalDescription
 
     def promptsCommit(
         self, decisionFrame: int, vectorID: str, done: bool,

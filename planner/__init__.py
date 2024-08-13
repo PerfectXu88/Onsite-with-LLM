@@ -1,6 +1,5 @@
-from planner.IDM.idm import IDM 
+from .LLM.llm import LLMController
 # from planner.Manual.manual_controller import ManualController
-# from planner.Lattice.lattice import LATTICE
-from planner.LLM.llm import LLMController
+from planner.Lattice.lattice import LATTICE
 
 PLANNER = LLMController

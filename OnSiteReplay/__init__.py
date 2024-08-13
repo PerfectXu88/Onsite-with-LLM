@@ -4,6 +4,10 @@ from utils.functions import check_action
 
 from .ReplayController import ReplayController
 
+import os
+
+sce, DA = None, None
+
 def run(mode_config: dict, planner: object, scene_info: ScenarioInfo) -> None:
     # 实例化回放测试流程控制模块
     controller = ReplayController(mode_config['visualize'])
@@ -28,7 +32,19 @@ def run(mode_config: dict, planner: object, scene_info: ScenarioInfo) -> None:
             recorder.output(scene_info.output_path)
             break
         # 如果仿真还在运行，则获取规控模块回传的控制信息
-        action = planner.act(controller.get_observation())
+        # action = planner.act(controller.get_observation())
+        print('action trying')
+
+        try:
+            action = planner.act(controller.get_observation())
+            print(f"Action: {action}")
+        except Exception as e:
+            import traceback
+            print("Exception occurred:")
+            traceback.print_exc()
+
+        #action = planner.act(controller.get_observation())
+        print(f'action is #{action}#')
         # 对规控器回传的控制信息进行执行器动力学约束修正
         ego_action = check_action(
             dt = scene_info.task_info['dt'], 

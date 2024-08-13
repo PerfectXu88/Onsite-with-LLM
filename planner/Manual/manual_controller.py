@@ -1,7 +1,6 @@
 import keyboard
 import numpy as np
 from planner.plannerBase import PlannerBase
-from typing import List
 
 class ManualController(PlannerBase):
     def __init__(self):
@@ -28,7 +27,7 @@ class ManualController(PlannerBase):
 
         return (up_or_down, left_or_right)
     
-    def act(self, observation) -> List:
+    def act(self, observation):
         acc = 0
         rotate = 0
 
